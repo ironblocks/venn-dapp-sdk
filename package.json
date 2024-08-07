@@ -2,12 +2,14 @@
   "name": "@ironblocks/venn-dapp-sdk",
   "version": "1.0.0",
   "description": "SDK for interactions with Venn Network",
+
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  
   "repository": "git@github.com:ironblocks/venn-dapp-sdk.git",
   "author": "Mark <mwoyshvillo@gmail.com>",
   "license": "MIT",
