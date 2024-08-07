@@ -2,14 +2,12 @@
   "name": "@ironblocks/venn-dapp-sdk",
   "version": "1.0.0",
   "description": "SDK for interactions with Venn Network",
-
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
-  
   "repository": "git@github.com:ironblocks/venn-dapp-sdk.git",
   "author": "Mark <mwoyshvillo@gmail.com>",
   "license": "MIT",
@@ -19,11 +17,9 @@
     "SDK",
     "web3"
   ],
-
   "gitHooks": {
     "pre-commit": "yarn ts-check && yarn lint && yarn test"
   },
-
   "scripts": {
     "build": "tsup",
     "ts-check": "tsc --noEmit",
@@ -33,7 +29,6 @@
     "publish": "npm pack && npm publish && rm -rf *.tgz",
     "publish:local": "npm link"
   },
-
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^22.1.0",
@@ -50,5 +45,9 @@
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",
     "yorkie": "^2.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.3",
+    "ethers": "^6.13.2"
   }
 }
