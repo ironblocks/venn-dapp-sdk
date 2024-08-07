@@ -1,0 +1,10 @@
+node_modules
+coverage
+.eslintcache
+scripts/*.mjs
+.eslintrc.json
+tsconfig.json
+*.md
+.prettierrc
+.vscode/*
+.yarn/*
