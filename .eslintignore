@@ -1,0 +1,13 @@
+build/*.js
+dist
+config/*.js
+playground
+*.schema.js
+index.html
+*.md
+static/env.js
+.eslintrc.js
+tsconfig.json
+scripts/*.js
+*.cjs
+*.js
