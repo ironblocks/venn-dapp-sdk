@@ -1,2 +1,5 @@
+export * from './approved-calls.types'
+export * from './contracts'
 export * from './inspector.types'
+export * from './legacy-server.types'
 export { type VennClientCreateOpts } from '@/venn-client'
