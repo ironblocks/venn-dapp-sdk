@@ -16,12 +16,10 @@ import { FirewallConsumerBaseInterface } from '@/types/contracts/FirewallConsume
 
 export type VennClientCreateOpts = {
   url: string
-  policyAddress?: string
 }
 
 export class VennClient {
   public url = ''
-  public policyAddress: string | undefined
 
   protected apiInstance: AxiosInstance
   protected approvedCallsPolicyInterface: ApprovedCallsPolicyInterface

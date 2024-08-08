@@ -33,25 +33,12 @@ let vennClient: VennClientExposed
 
 describe('Venn Client Tests', () => {
   describe('Init tests', () => {
-    test('no policy', () => {
+    test('default init', () => {
       const client = new VennClient({ url: VENN_NODE_URL })
 
       expect(client.url).toBe(VENN_NODE_URL)
       expect(typeof client.inspectTx).toBe('function')
       expect(typeof client.signTx).toBe('function')
-      expect(client.policyAddress).toBeUndefined()
-    })
-
-    test('with policy', () => {
-      const client = new VennClient({
-        url: VENN_NODE_URL,
-        policyAddress: POLICY_ADDRESS,
-      })
-
-      expect(client.url).toBe(VENN_NODE_URL)
-      expect(typeof client.inspectTx).toBe('function')
-      expect(typeof client.signTx).toBe('function')
-      expect(client.policyAddress).toBe(POLICY_ADDRESS)
     })
   })
 
