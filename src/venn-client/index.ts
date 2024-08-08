@@ -9,7 +9,7 @@ import {
   type InspectTxResponse,
   type LEGACY__SignedTxResponse,
   type LEGACY__SignTxRequest,
-  SafeFunctionCallPayload,
+  type SafeFunctionCallPayload,
 } from '@/types'
 import { ApprovedCallsPolicyInterface } from '@/types/contracts/ApprovedCallsPolicy'
 import { FirewallConsumerBaseInterface } from '@/types/contracts/FirewallConsumerBase'

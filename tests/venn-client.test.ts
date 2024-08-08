@@ -1,6 +1,6 @@
 import { AbiCoder, encodeBytes32String, ZeroAddress } from 'ethers'
 
-import { ApprovedCallsPayload, SafeFunctionCallPayload } from '@/types'
+import { type ApprovedCallsPayload, type SafeFunctionCallPayload } from '@/types'
 import { VennClient, VennClientCreateOpts } from '@/venn-client'
 
 /* FOR TESTING NON-PUBLIC METHODS AND FIELDS */
