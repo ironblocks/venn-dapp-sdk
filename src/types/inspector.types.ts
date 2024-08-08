@@ -1,11 +1,11 @@
+// https://github.com/ironblocks/IB.Service.Go.BlockBeat?tab=readme-ov-file#1112-request-struct
 export type InspectTxPayload = {
   requestId: string
   chainId: number
   from: string
   to: string
   data?: string
-  value: string // in docs it is stated as `interface{}. WDIM?`
-  // https://github.com/ironblocks/IB.Service.Go.BlockBeat?tab=readme-ov-file#1112-request-struct
+  value: string
   inspectOnly?: boolean
 }
 
