@@ -23,6 +23,7 @@ describe('Venn Client Tests', () => {
 
       expect(client.url).toBe(VENN_NODE_URL)
       expect(typeof client.inspectTx).toBe('function')
+      expect(typeof client.getSignature).toBe('function')
       expect(client.policyAddress).toBeUndefined()
     })
 
@@ -34,6 +35,7 @@ describe('Venn Client Tests', () => {
 
       expect(client.url).toBe(VENN_NODE_URL)
       expect(typeof client.inspectTx).toBe('function')
+      expect(typeof client.getSignature).toBe('function')
       expect(client.policyAddress).toBe(POLICY_ADDRESS)
     })
   })
@@ -52,6 +54,11 @@ describe('Venn Client Tests', () => {
       // const inspectionResult = await client.inspectTx(MOCKED_TX)
 
       // expect(inspectionResult.requestId).toBe(MOCKED_TX.requestId)
+    })
+
+    test('sign fail', async () => {
+      // no working url is available for now
+      expect(vennClient.getSignature(MOCKED_TX)).rejects.toThrow()
     })
   })
 })

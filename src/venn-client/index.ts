@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 
-import { type InspectTxPayload, type InspectTxResponse } from '@/types'
+import { type InspectTxPayload, type InspectTxResponse, type SignedTxResponse } from '@/types'
 
 export type VennClientCreateOpts = {
   url: string
@@ -24,6 +24,12 @@ export class VennClient {
       ...opts,
       inspectOnly: true,
     })
+
+    return data
+  }
+
+  public async getSignature(opts: Omit<InspectTxPayload, 'inspectOnly'>) {
+    const { data } = await this.apiInstance.post<SignedTxResponse>('/signer', opts)
 
     return data
   }
