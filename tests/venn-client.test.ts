@@ -1,6 +1,11 @@
 import { AbiCoder, encodeBytes32String, ZeroAddress } from 'ethers'
 
-import { type ApprovedCallsPayload, type SafeFunctionCallPayload } from '@/types'
+import { errors } from '@/errors'
+import {
+  type ApprovedCallsPayload,
+  type LEGACY__SignTxRequest,
+  type SafeFunctionCallPayload,
+} from '@/types'
 import { VennClient, VennClientCreateOpts } from '@/venn-client'
 
 /* FOR TESTING NON-PUBLIC METHODS AND FIELDS */
@@ -14,6 +19,9 @@ class VennClientExposed extends VennClient {
   }
   public _encodeSafeFunctionCall(data: SafeFunctionCallPayload) {
     return this.encodeSafeFunctionCall(data)
+  }
+  public _getSignature(txData: LEGACY__SignTxRequest) {
+    return this.getSignature(txData)
   }
 }
 
@@ -50,51 +58,101 @@ describe('Venn Client Tests', () => {
     })
 
     describe('Private methods', () => {
-      test('encodeSafeFunctionCall', () => {
-        const result = vennClient._encodeSafeFunctionCall({
-          target: MOCKED_TX.to,
-          targetPayload: AbiCoder.defaultAbiCoder().encode(
-            ['string', 'address'],
-            ['test string', MOCKED_TX.from],
-          ),
-          data: MOCKED_TX.data,
-        })
+      describe('encodeSafeFunctionCall', () => {
+        test('success', () => {
+          const result = vennClient._encodeSafeFunctionCall({
+            target: MOCKED_TX.to,
+            targetPayload: AbiCoder.defaultAbiCoder().encode(
+              ['string', 'address'],
+              ['test string', MOCKED_TX.from],
+            ),
+            data: MOCKED_TX.data,
+          })
 
-        expect(result).toBe(
-          '0x1a8828f4000000000000000000000000f06ab383528f51da67e2b2407327731770156ed600000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000400000000000000000000000006738fa889ff31f82d9fe8862ec025dbe318f3fde000000000000000000000000000000000000000000000000000000000000000b7465737420737472696e6700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c42ebd2116000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000009a5cd1145791b29ac4e68df3bf8e30d2167daa76000000000000000000000000a150a825d425b36329d8294eef8bd0fe68f8f6e000000000000000000000000067c5870b4a41d4ebef24d2456547a03f1f3e094b0000000000000000000000000c6c80d2061afa35e160f3799411d83bdeea0a5a000000000000000000000000000000000000000000000000000004a15724a9fd00000000000000000000000000000000000000000000000000000000',
-        )
+          expect(result).toBe(
+            '0x1a8828f4000000000000000000000000f06ab383528f51da67e2b2407327731770156ed600000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000400000000000000000000000006738fa889ff31f82d9fe8862ec025dbe318f3fde000000000000000000000000000000000000000000000000000000000000000b7465737420737472696e6700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c42ebd2116000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000009a5cd1145791b29ac4e68df3bf8e30d2167daa76000000000000000000000000a150a825d425b36329d8294eef8bd0fe68f8f6e000000000000000000000000067c5870b4a41d4ebef24d2456547a03f1f3e094b0000000000000000000000000c6c80d2061afa35e160f3799411d83bdeea0a5a000000000000000000000000000000000000000000000000000004a15724a9fd00000000000000000000000000000000000000000000000000000000',
+          )
+        })
+        test('error: invalid target', () => {
+          expect(() =>
+            vennClient._encodeSafeFunctionCall({
+              target: 'invalid address',
+              targetPayload: AbiCoder.defaultAbiCoder().encode(
+                ['string', 'address'],
+                ['test string', MOCKED_TX.from],
+              ),
+              data: MOCKED_TX.data,
+            }),
+          ).toThrow(errors.FailedToEncodeSafeFunctionCallError)
+        })
+        test('error: invalid data', () => {
+          expect(() =>
+            vennClient._encodeSafeFunctionCall({
+              target: MOCKED_TX.from,
+              targetPayload: AbiCoder.defaultAbiCoder().encode(
+                ['string', 'address'],
+                ['test string', MOCKED_TX.from],
+              ),
+              data: 'invalid data',
+            }),
+          ).toThrow(errors.FailedToEncodeSafeFunctionCallError)
+        })
       })
 
-      test('encodeApprovedCalls', () => {
-        const result = vennClient._encodeApprovedCalls({
-          txOrigin: MOCKED_TX.from,
-          nonce: 1,
-          expiration: '1723125409',
-          signature: '0x',
-          callHashes: [encodeBytes32String('0x')],
-        })
+      describe('encodeApprovedCalls', () => {
+        test('success', () => {
+          const result = vennClient._encodeApprovedCalls({
+            txOrigin: MOCKED_TX.from,
+            nonce: 1,
+            expiration: '1723125409',
+            signature: '0x',
+            callHashes: [encodeBytes32String('0x')],
+          })
 
-        expect(result).toBe(
-          '0x0c908cff00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000066b4cea10000000000000000000000006738fa889ff31f82d9fe8862ec025dbe318f3fde000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000130780000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        )
+          expect(result).toBe(
+            '0x0c908cff00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000066b4cea10000000000000000000000006738fa889ff31f82d9fe8862ec025dbe318f3fde000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000130780000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          )
+        })
+        test('error: invalid expiration', () => {
+          expect(() => {
+            vennClient._encodeApprovedCalls({
+              txOrigin: MOCKED_TX.from,
+              nonce: 1,
+              expiration: new Date().toISOString(),
+              signature: '0x',
+              callHashes: [encodeBytes32String('0x')],
+            })
+          }).toThrow(errors.FailedToEncodeApprovedCallsError)
+        })
+        test('error: invalid callHashes', () => {
+          expect(() => {
+            vennClient._encodeApprovedCalls({
+              txOrigin: MOCKED_TX.from,
+              nonce: 1,
+              expiration: '1723125409',
+              signature: '0x',
+              callHashes: ['0x'],
+            })
+          }).toThrow(errors.FailedToEncodeApprovedCallsError)
+        })
       })
     })
 
     describe('Public methods', () => {
-      test('inspect fail', async () => {
-        // no working url is available for now
-        expect(vennClient.inspectTx(MOCKED_TX)).rejects.toThrow()
-
-        // const inspectionResult = await client.inspectTx(MOCKED_TX)
-
-        // expect(inspectionResult.requestId).toBe(MOCKED_TX.requestId)
+      describe('inspectTx', () => {
+        test('no connection fail', async () => {
+          // no working url is available for now
+          expect(vennClient.inspectTx(MOCKED_TX)).rejects.toThrow(errors.ConnectionRefusedError)
+        })
       })
 
-      test('sign fail', async () => {
-        // no working url is available for now
-        expect(
-          vennClient.signTx({ ...MOCKED_TX, approvingPolicyAddress: POLICY_ADDRESS }),
-        ).rejects.toThrow()
+      describe('signTx', () => {
+        test('no connection fail', async () => {
+          // no working url is available for now
+          expect(
+            vennClient.signTx({ ...MOCKED_TX, approvingPolicyAddress: POLICY_ADDRESS }),
+          ).rejects.toThrow(errors.ConnectionRefusedError)
+        })
       })
     })
   })

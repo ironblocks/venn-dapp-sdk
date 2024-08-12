@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { TransactionRequest } from 'ethers'
 
+import { errors } from '@/errors'
+import { parseApiError, parseErrorMessage, parseLegacyServerError } from '@/helpers'
 import {
   type ApprovedCallsPayload,
   ApprovedCallsPolicy__factory,
@@ -35,37 +37,65 @@ export class VennClient {
   }
 
   protected encodeApprovedCalls(data: ApprovedCallsPayload) {
-    return this.approvedCallsPolicyInterface.encodeFunctionData('approveCallsViaSignature', [
-      data.callHashes,
-      data.expiration,
-      data.txOrigin,
-      data.nonce,
-      data.signature,
-    ])
+    try {
+      const encodedData = this.approvedCallsPolicyInterface.encodeFunctionData(
+        'approveCallsViaSignature',
+        [data.callHashes, data.expiration, data.txOrigin, data.nonce, data.signature],
+      )
+
+      return encodedData
+    } catch (error) {
+      throw new errors.FailedToEncodeApprovedCallsError(parseErrorMessage(error))
+    }
   }
 
   protected encodeSafeFunctionCall({ target, targetPayload, data }: SafeFunctionCallPayload) {
-    return this.firewallConsumerInterface.encodeFunctionData('safeFunctionCall', [
-      target,
-      targetPayload,
-      data,
-    ])
+    try {
+      const encodedData = this.firewallConsumerInterface.encodeFunctionData('safeFunctionCall', [
+        target,
+        targetPayload,
+        data,
+      ])
+
+      return encodedData
+    } catch (error) {
+      throw new errors.FailedToEncodeSafeFunctionCallError(parseErrorMessage(error))
+    }
+  }
+
+  protected async getSignature(txData: LEGACY__SignTxRequest): Promise<ApprovedCallsPayload> {
+    try {
+      const { data: signedData } = await this.apiInstance.post<LEGACY__SignedTxResponse>(
+        '/services/firewall/sign',
+        txData,
+      )
+
+      // some errors come with 200 status ^_^
+      if (signedData.status !== 'Approved') {
+        throw signedData
+      }
+
+      return signedData
+    } catch (error) {
+      throw parseApiError(error) ?? parseLegacyServerError(error)
+    }
   }
 
   public async inspectTx(opts: Omit<InspectTxPayload, 'inspectOnly'>) {
-    const { data } = await this.apiInstance.post<InspectTxResponse>('/signer', {
-      ...opts,
-      inspectOnly: true,
-    })
+    try {
+      const { data } = await this.apiInstance.post<InspectTxResponse>('/signer', {
+        ...opts,
+        inspectOnly: true,
+      })
 
-    return data
+      return data
+    } catch (error) {
+      throw parseApiError(error) ?? parseLegacyServerError(error)
+    }
   }
 
   public async signTx(txData: LEGACY__SignTxRequest): Promise<TransactionRequest> {
-    const { data: signedData } = await this.apiInstance.post<LEGACY__SignedTxResponse>(
-      '/services/firewall/sign',
-      txData,
-    )
+    const signedData = await this.getSignature(txData)
 
     const approvedPayload = this.encodeApprovedCalls(signedData)
 
