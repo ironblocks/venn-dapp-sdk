@@ -1,3 +1,4 @@
+export * from '@/errors'
 export * from '@/types/approved-calls.types'
 export * from '@/types/inspector.types'
 export * from '@/types/legacy-server.types'

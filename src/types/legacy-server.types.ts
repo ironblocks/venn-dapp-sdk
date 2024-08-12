@@ -5,7 +5,12 @@
 
 import { ApprovedCallsPayload } from './approved-calls.types'
 
-export type LEGACY__SignedTxResponse = ApprovedCallsPayload
+export type LEGACY__TxStatus = 'Approved' | 'Rejected' | 'Error'
+
+export type LEGACY__SignedTxResponse = {
+  status: LEGACY__TxStatus
+  message?: string
+} & ApprovedCallsPayload
 
 export type LEGACY__SignTxRequest = {
   from: string

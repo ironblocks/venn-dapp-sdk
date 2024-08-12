@@ -1,3 +1,4 @@
+export * from './api.types'
 export * from './approved-calls.types'
 export * from './contracts'
 export * from './inspector.types'
