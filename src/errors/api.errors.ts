@@ -1,4 +1,4 @@
-import { CanceledError } from 'axios'
+export { CanceledError } from 'axios'
 
 export class ConnectionRefusedError extends Error {
   constructor(message?: string) {
@@ -29,5 +29,3 @@ export class BadRequestError extends Error {
     super(message)
   }
 }
-
-export { CanceledError }

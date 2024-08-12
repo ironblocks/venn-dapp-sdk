@@ -3,7 +3,7 @@ import { AbiCoder, encodeBytes32String, ZeroAddress } from 'ethers'
 import { errors } from '@/errors'
 import {
   type ApprovedCallsPayload,
-  LEGACY__SignTxRequest,
+  type LEGACY__SignTxRequest,
   type SafeFunctionCallPayload,
 } from '@/types'
 import { VennClient, VennClientCreateOpts } from '@/venn-client'
