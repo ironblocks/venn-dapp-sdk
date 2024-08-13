@@ -11,7 +11,7 @@ SDK for easy DApp integrations with Venn Security Network. SDK is framework agno
 ## Table of Contents
 - [Introduction](#ironblocksvenn-dapp-sdk)
 - [Installation](#installation)
-- [Usage](#usage):
+- [Usage:](#usage)
     - [Transaction Inspection](#transaction-inspection)
     - [Venn Network Signature](#venn-network-signature)
     - [Errors handling](#errors-handling)
