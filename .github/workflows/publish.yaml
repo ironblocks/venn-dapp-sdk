@@ -2,6 +2,9 @@ name: Publish to NPM
 on:
   release:
     types: [created]
+  push:
+    tags:
+      - 'v*'  # Matches tag names like v1.0, v2.0.1, etc.
   workflow_dispatch: # Allows manual triggering of the workflow
 jobs:
   build:
