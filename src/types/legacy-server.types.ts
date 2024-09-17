@@ -3,20 +3,26 @@
     DO NOT RELY ON THAT IN PRODUCTION
 */
 
-import { ApprovedCallsPayload } from './approved-calls.types'
+export type TxStatus = 'Approved' | 'Rejected' | 'Error'
 
-export type LEGACY__TxStatus = 'Approved' | 'Rejected' | 'Error'
-
-export type LEGACY__SignedTxResponse = {
-  status: LEGACY__TxStatus
-  message?: string
-} & ApprovedCallsPayload
-
-export type LEGACY__SignTxRequest = {
+export type SignedTxData = {
   from: string
   to: string
   value: string
   data: string // encoded tx data
+}
+
+export type SignedTxResponse = {
+  requestId: string
+  status: TxStatus
+  data: SignedTxData
+  message?: string
+}
+
+export type SignTxClientRequest = SignedTxData
+
+export type SignTxServerRequest = SignTxClientRequest & {
   chainId: number
   approvingPolicyAddress: string
+  mockApproval?: boolean
 }

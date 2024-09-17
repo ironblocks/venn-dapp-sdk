@@ -1,43 +1,52 @@
-import { isAxiosError } from 'axios'
+import { AxiosError, isAxiosError } from 'axios'
 
 import { errors } from '@/errors'
-import { API_ERROR_CODE, LEGACY__TxStatus } from '@/types'
+import { API_ERROR_CODE, TxStatus } from '@/types'
 
-type LegacyServiceLikeError = {
+type ResponseData = {
   message: string
-  status: LEGACY__TxStatus
+  status: TxStatus
+  data: any
 }
 
-const isLegacyServerLikeError = (data: unknown): data is LegacyServiceLikeError =>
-  typeof data === 'object' &&
-  data !== null &&
-  ['message', 'status'].every(prop => Reflect.has(data, prop))
+const isLegacyServerLikeError = (error: AxiosError) =>
+  typeof error === 'object' &&
+  error !== null &&
+  typeof error.response?.data === 'object' &&
+  error.response?.data !== null &&
+  ['message', 'status'].every(prop =>
+    Object.prototype.hasOwnProperty.call(error.response?.data as object, prop),
+  )
 
 export const parseLegacyServerError = (error: unknown) => {
-  if (!isLegacyServerLikeError(error)) return error
+  if (!isLegacyServerLikeError(error as AxiosError)) return error
 
-  const parseServerError = ({ message }: LegacyServiceLikeError) => {
+  const responseData = (error as AxiosError).response?.data as ResponseData
+  const message = responseData.message
+  const status = responseData.status
+
+  const parseServerError = (message: string) => {
     const _message = message.toLowerCase()
 
     switch (true) {
-      case _message.includes('policy call'):
-        return new errors.LEGACY__NoPolicyCallInTraceError(message)
+      case _message.includes('policy'):
+        return new errors.NoPolicyCallInTraceError(message)
       case _message.includes('invalid request'):
         return new errors.BadRequestError(message)
       case _message.includes('monitored assets'):
-        return new errors.LEGACY__NoMonitoredAssetsError(message)
+        return new errors.NoMonitoredAssetsError(message)
       default:
-        return new errors.LEGACY__InternalError(message)
+        return new errors.InternalError(message)
     }
   }
 
-  switch (error.status) {
+  switch (status) {
     case 'Rejected':
-      return new errors.LEGACY__TxRejectedError(error.message)
+      return new errors.TxRejectedError(message)
     case 'Error':
-      return parseServerError(error)
+      return parseServerError(message)
     default:
-      return new errors.LEGACY__InternalError(error.message)
+      return new errors.InternalError(message)
   }
 }
 
