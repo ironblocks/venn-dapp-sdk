@@ -23,9 +23,9 @@ SDK for easy DApp integrations with Venn Security Network. This SDK is framework
 ## Installation
 
 ```bash
-npm install @ironblocks/venn-dapp-sdk
-yarn add @ironblocks/venn-dapp-sdk
-pnpm add @ironblocks/venn-dapp-sdk
+npm install @vennbuild/venn-dapp-sdk
+yarn add @vennbuild/venn-dapp-sdk
+pnpm add @vennbuild/venn-dapp-sdk
 ```
 
 ## Usage
