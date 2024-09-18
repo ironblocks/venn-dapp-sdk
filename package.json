@@ -1,6 +1,6 @@
 {
   "name": "@ironblocks/venn-dapp-sdk",
-  "version": "1.0.0",
+  "version": "0.8.0",
   "description": "SDK for interactions with Venn Network",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -8,14 +8,20 @@
   "files": [
     "dist"
   ],
-  "repository": "git@github.com:ironblocks/venn-dapp-sdk.git",
-  "author": "Mark <mwoyshvillo@gmail.com>",
+  "repository": "https://github.com/ironblocks/venn-dapp-sdk",
+  "homepage": "https://github.com/ironblocks/venn-dapp-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/ironblocks/venn-dapp-sdk/issues"
+  },
+  "author": "Venn Network",
   "license": "MIT",
   "keywords": [
-    "ironblocks",
-    "Venn Network",
     "SDK",
-    "web3"
+    "web3",
+    "Venn",
+    "Venn Network",
+    "blockchain",
+    "ethereum"
   ],
   "gitHooks": {
     "pre-commit": "yarn ts-check && yarn lint && yarn test"

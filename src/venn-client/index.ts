@@ -1,115 +1,133 @@
 import axios, { AxiosInstance } from 'axios'
-import { TransactionRequest } from 'ethers'
+import { isAddress } from 'ethers'
 
-import { errors } from '@/errors'
-import { parseApiError, parseErrorMessage, parseLegacyServerError } from '@/helpers'
+import { parseLegacyServerError } from '@/helpers'
 import {
-  type ApprovedCallsPayload,
-  ApprovedCallsPolicy__factory,
-  FirewallConsumerBase__factory,
-  type InspectTxPayload,
-  type InspectTxResponse,
-  type LEGACY__SignedTxResponse,
-  type LEGACY__SignTxRequest,
-  type SafeFunctionCallPayload,
+  SignedTxData,
+  type SignedTxResponse,
+  SignTxClientRequest,
+  SignTxServerRequest,
 } from '@/types'
-import { ApprovedCallsPolicyInterface } from '@/types/contracts/ApprovedCallsPolicy'
-import { FirewallConsumerBaseInterface } from '@/types/contracts/FirewallConsumerBase'
 
 export type VennClientCreateOpts = {
-  url: string
+  vennURL: string
+  approvingPolicyAddress: string
+  chainId: number
+  strict?: boolean
 }
 
 export class VennClient {
-  public url = ''
+  protected url: string
+
+  protected approvingPolicyAddress: string
+
+  protected chainId: number
 
   protected apiInstance: AxiosInstance
-  protected approvedCallsPolicyInterface: ApprovedCallsPolicyInterface
-  protected firewallConsumerInterface: FirewallConsumerBaseInterface
 
+  protected strict: boolean
+
+  /**
+   * Creates a new VennClient instance.
+   * @param {string} opts.url - The URL of the Singer API.
+   * @param {string} opts.approvingPolicyAddress - The address of the approved calls policy.
+   * @param {number} opts.chainId - The chain ID of the network.
+   * @param {boolean} [opts.strict=true] - Optional. Whether to throw an error if the response from the signer is not 'Approved'. Defaults to true. If set to false, will return the request data on failure.
+   * @throws {Error} If any required property is missing.
+   */
   constructor(opts: VennClientCreateOpts) {
-    Object.assign(this, opts)
+    this.validateRequiredProperties(opts)
+
+    this.url = opts.vennURL
+    this.approvingPolicyAddress = opts.approvingPolicyAddress
+    this.chainId = opts.chainId
+    this.strict = opts.strict ?? true
 
     this.apiInstance = axios.create({ baseURL: this.url })
-
-    this.approvedCallsPolicyInterface = ApprovedCallsPolicy__factory.createInterface()
-    this.firewallConsumerInterface = FirewallConsumerBase__factory.createInterface()
   }
 
-  protected encodeApprovedCalls(data: ApprovedCallsPayload) {
-    try {
-      const encodedData = this.approvedCallsPolicyInterface.encodeFunctionData(
-        'approveCallsViaSignature',
-        [data.callHashes, data.expiration, data.txOrigin, data.nonce, data.signature],
-      )
-
-      return encodedData
-    } catch (error) {
-      throw new errors.FailedToEncodeApprovedCallsError(parseErrorMessage(error))
+  protected async getSignature(
+    txData: SignTxClientRequest,
+  ): Promise<SignedTxResponse | { data: SignTxClientRequest } | undefined> {
+    const requestData: SignTxServerRequest = {
+      ...txData,
+      chainId: this.chainId,
+      approvingPolicyAddress: this.approvingPolicyAddress,
     }
-  }
-
-  protected encodeSafeFunctionCall({ target, targetPayload, data }: SafeFunctionCallPayload) {
     try {
-      const encodedData = this.firewallConsumerInterface.encodeFunctionData('safeFunctionCall', [
-        target,
-        targetPayload,
-        data,
-      ])
-
-      return encodedData
-    } catch (error) {
-      throw new errors.FailedToEncodeSafeFunctionCallError(parseErrorMessage(error))
-    }
-  }
-
-  protected async getSignature(txData: LEGACY__SignTxRequest): Promise<ApprovedCallsPayload> {
-    try {
-      const { data: signedData } = await this.apiInstance.post<LEGACY__SignedTxResponse>(
-        '/services/firewall/sign',
-        txData,
-      )
-
+      const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
       // some errors come with 200 status ^_^
       if (signedData.status !== 'Approved') {
-        throw signedData
+        const error = `Request not approved. Status: ${signedData.status}. Message: ${
+          signedData.message || 'No message provided'
+        }`
+        throw new Error(error)
       }
 
       return signedData
     } catch (error) {
-      throw parseApiError(error) ?? parseLegacyServerError(error)
+      return this.handleError(error, parseLegacyServerError, txData)
     }
   }
 
-  public async inspectTx(opts: Omit<InspectTxPayload, 'inspectOnly'>) {
+  public async approve(
+    txData: SignTxClientRequest,
+  ): Promise<SignedTxData | { data: SignTxClientRequest }> {
+    const signedData = (await this.getSignature(txData)) as SignedTxResponse
     try {
-      const { data } = await this.apiInstance.post<InspectTxResponse>('/signer', {
-        ...opts,
-        inspectOnly: true,
-      })
-
+      const { data } = signedData
       return data
     } catch (error) {
-      throw parseApiError(error) ?? parseLegacyServerError(error)
+      return this.handleError(error, () => new Error('Could not parse signature data'), txData)
     }
   }
 
-  public async signTx(txData: LEGACY__SignTxRequest): Promise<TransactionRequest> {
-    const signedData = await this.getSignature(txData)
-
-    const approvedPayload = this.encodeApprovedCalls(signedData)
-
-    const wrappedTxData = this.encodeSafeFunctionCall({
-      target: txData.approvingPolicyAddress,
-      targetPayload: approvedPayload,
-      data: txData.data,
-    })
-
-    return {
-      data: wrappedTxData,
-      from: signedData.txOrigin,
-      to: txData.to,
-      value: txData.value,
+  private validateRequiredProperties(opts: VennClientCreateOpts) {
+    if (!opts.vennURL || !opts.approvingPolicyAddress || !opts.chainId) {
+      throw new Error(
+        'Missing required properties. url, approvingPolicyAddress, and chainId are required.',
+      )
     }
+
+    if (!this.isValidUrl(opts.vennURL)) {
+      throw new Error('Invalid URL provided.')
+    }
+
+    if (!this.isValidEthereumAddress(opts.approvingPolicyAddress)) {
+      throw new Error('Invalid Ethereum address provided for approvingPolicyAddress.')
+    }
+
+    if (!this.isValidChainId(opts.chainId)) {
+      throw new Error('Invalid chainId. Must be a positive integer.')
+    }
+  }
+
+  private isValidUrl(url: string): boolean {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  private isValidEthereumAddress(address: string): boolean {
+    return isAddress(address)
+  }
+
+  private isValidChainId(chainId: number): boolean {
+    return Number.isInteger(chainId) && chainId > 0
+  }
+
+  private handleError(
+    error: any,
+    errorFunction: (error: unknown) => unknown,
+    txData: SignTxClientRequest,
+  ): { data: SignTxClientRequest } {
+    if (this.strict) {
+      throw errorFunction(error)
+    }
+    // npm unwraps the 'data' property of the object
+    return { data: txData }
   }
 }
