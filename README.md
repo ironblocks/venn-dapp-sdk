@@ -116,4 +116,6 @@ Original transaction data is substituted with the same data, but signed by Venn 
 
 ### Errors 
 
-TBD
+Coming soon.
+
+**This SDK demonstrates how to integrate the Ironblocks Firewall with Venn Network**
