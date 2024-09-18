@@ -1,6 +1,6 @@
 {
   "name": "@vennbuild/venn-dapp-sdk",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "SDK for interactions with Venn Network",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -24,7 +24,7 @@
     "ethereum"
   ],
   "gitHooks": {
-    "pre-commit": "yarn ts-check && yarn lint && yarn test"
+    "pre-commit": "npm run ts-check && npm run lint && npm run test"
   },
   "scripts": {
     "build": "tsup",
@@ -32,7 +32,7 @@
     "lint": "eslint . --ext .ts --max-warnings=0",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest --silent=false",
-    "publish": "npm pack && npm publish && rm -rf *.tgz",
+    "publish:npm": "npm pack && npm publish && rm -rf *.tgz",
     "publish:local": "npm link",
     "generate-abi-types": "typechain --target=ethers-v6 'src/abi/**/*.json' --out-dir src/types/contracts"
   },
