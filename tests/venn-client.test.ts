@@ -1,7 +1,6 @@
 import { AxiosInstance } from 'axios'
-import { ZeroAddress } from 'ethers'
+import { ethers, ZeroAddress } from 'ethers'
 
-import { type SignTxClientRequest } from '@/types'
 import { VennClient, VennClientCreateOpts } from '@/venn-client'
 
 jest.mock('axios')
@@ -12,7 +11,7 @@ class VennClientExposed extends VennClient {
     super(data)
   }
 
-  public _getSignature(txData: SignTxClientRequest) {
+  public _getSignature(txData: ethers.TransactionRequest) {
     return this.getSignature(txData)
   }
 
@@ -50,8 +49,7 @@ describe('Venn Client Tests', () => {
     test('default init', () => {
       const client = new VennClientExposed({
         vennURL: VENN_NODE_URL,
-        chainId: CHAIN_ID,
-        approvingPolicyAddress: POLICY_ADDRESS,
+        vennPolicyAddress: POLICY_ADDRESS,
       })
 
       expect(client._url).toBe(VENN_NODE_URL)
@@ -63,8 +61,7 @@ describe('Venn Client Tests', () => {
     beforeAll(() => {
       vennClient = new VennClientExposed({
         vennURL: VENN_NODE_URL,
-        chainId: CHAIN_ID,
-        approvingPolicyAddress: POLICY_ADDRESS,
+        vennPolicyAddress: POLICY_ADDRESS,
       })
     })
 

@@ -1,14 +1,15 @@
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)
-![Yarn](https://img.shields.io/badge/yarn-%232C8EBB.svg?style=for-the-badge&logo=yarn&logoColor=white)
 
-# @ironblocks/venn-dapp-sdk
+
+# @vennbuild/venn-dapp-sdk
 SDK for easy DApp integrations with Venn Security Network. This SDK is framework agnostic and will be compatible with any modern web application.
 
 [What is Venn?](https://docs.venn.build/)
 
 ## Table of Contents
+- [Quick Start](#quick-start)
 - [Introduction](#ironblocksvenn-dapp-sdk)
 - [Installation](#installation)
 - [Usage:](#usage)
@@ -16,8 +17,31 @@ SDK for easy DApp integrations with Venn Security Network. This SDK is framework
         - [Background](#background)
         - [Getting started](#getting-started)
         - [Example - How to use the SDK](#example---how-to-use-the-sdk)
-    - [Error handling](#errors)
 
+
+
+
+
+## Quick Start
+Install the SDK with npm install `@vennbuild/venn-dapp-sdk`. Initialize a `VennClient` with a `Venn Node URL`, `policy contract address`, and `chain ID`. Create a transaction request (from, to, data, value), then call `approve()` to get the signed transaction. Submit the signed transaction on-chain. 
+
+```ts
+import { VennClient } from '@vennbuild/venn-dapp-sdk'
+import ethers from 'ethers'
+
+const vennClient = new VennClient({
+  vennURL: 'https://api.venn.build/test/url/do/not/use',
+  vennPolicyAddress: '0x1234567890123456789012345678901234567890',
+})
+const transaction = {
+  from: '0x1234567890123456789012345678901234567890',
+  to: '0x1234567890123456789012345678901234567890',
+  data: '0x1234567890123456789012345678901234567890',
+  value: '0'
+}
+const signedTransaction = await vennClient.approve(transaction)
+
+```
 
 
 ## Installation
@@ -50,8 +74,7 @@ For more information about setting up your contracts, please refer to [Venn Docu
 
 1. Create a new Venn Client instance with your Venn Node URL. Pass the following parameters:
 - `vennURL`: String. URL of your Venn Node.
-- `approvingPolicyAddress`: String. Address of the `ApprovedCallsPolicy` contract.
-- `chainId`: Number. Chain ID of the network you're interacting with.
+- `vennPolicyAddress`: String. Address of the `ApprovedCallsPolicy` contract.
 - `strict`: Boolean. If set to `true`, the SDK will throw an error in case of an error while signing the transaction or if the transaction is not approved by Venn Network. If set to `false`, the SDK will return a request data in case of an error. Default value is `true`.
 
 
@@ -73,23 +96,21 @@ For more information about setting up your contracts, please refer to [Venn Docu
 
 ### Example - How to use the SDK
 ```ts
-import { VennClient, InspectTxResponse } from '@ironblocks/venn-dapp-sdk'
-import { TransactionRequest } from 'ethers'
+import { VennClient } from '@ironblocks/venn-dapp-sdk'
 
 const url = process.env.VENN_NODE_URL
-const policyAddress = process.env.APPROVED_CALLS_POLICY_ADDRESS
-const chainId = process.env.CHAIN_ID
+const policyAddress = process.env.VENN_POLICY_ADDRESS
 
-const vennClient = new VennClient({ vennURL: url , approvingPolicyAddress: policyAddress, chainId: chainId})
+const vennClient = new VennClient({ vennURL: url , vennPolicyAddress: policyAddress})
 
-const transaction: TransactionRequest = {
+const transaction= {
     from: '0xfdD055Cf3EaD343AD51f4C7d1F12558c52BaDFA5',
     to: '0x10A88C7001900CE4299f62dA80D1c76121DcbAF6',
     data: '0x88C70010' // encoded data of your transaction
-    value: 0
+    value: ethers.utils.parseEther('0')
 }
 
-const signedTransaction: TransactionRequest = await vennClient.approve(transaction)
+const signedTransaction = await vennClient.approve(transaction)
 
 console.log(signedTransaction)
 // {
@@ -111,9 +132,5 @@ Original transaction data is substituted with the same data, but signed by Venn 
 3. User can now submit the signed transaction **as is** to the network instead of the original one.
 4. If the transaction is not approved, the SDK will throw an error indicating that the transaction was rejected.
 
-
-### Errors 
-
-Coming soon.
 
 **This SDK demonstrates how to integrate the Ironblocks Firewall with Venn Network**
