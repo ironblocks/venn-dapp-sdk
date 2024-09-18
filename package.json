@@ -1,5 +1,5 @@
 {
-  "name": "@ironblocks/venn-dapp-sdk",
+  "name": "@vennbuild/venn-dapp-sdk",
   "version": "0.8.0",
   "description": "SDK for interactions with Venn Network",
   "main": "./dist/index.js",
