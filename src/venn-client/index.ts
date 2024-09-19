@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import { ethers, isAddress } from 'ethers'
 
-import { parseLegacyServerError } from '@/helpers'
+import { parseServerError } from '@/helpers'
 import { type SignedTxResponse, type SignTxServerRequest } from '@/types'
 
 export type VennClientCreateOpts = {
@@ -56,7 +56,7 @@ export class VennClient {
 
       return signedData
     } catch (error) {
-      return this.handleError(error, parseLegacyServerError, txData)
+      return this.handleError(error, parseServerError, txData)
     }
   }
 

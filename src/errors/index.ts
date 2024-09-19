@@ -1,7 +1,7 @@
 import * as apiErrors from './api.errors'
-import * as legacyServerErrors from './server.errors'
+import * as serverErrors from './server.errors'
 
 export const errors = {
-  ...legacyServerErrors,
+  ...serverErrors,
   ...apiErrors,
 }
