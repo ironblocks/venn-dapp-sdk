@@ -1,27 +1,19 @@
 import axios, { AxiosInstance } from 'axios'
-import { isAddress } from 'ethers'
+import { ethers, isAddress } from 'ethers'
 
-import { parseLegacyServerError } from '@/helpers'
-import {
-  SignedTxData,
-  type SignedTxResponse,
-  SignTxClientRequest,
-  SignTxServerRequest,
-} from '@/types'
+import { parseServerError } from '@/helpers'
+import { type SignedTxResponse, type SignTxServerRequest } from '@/types'
 
 export type VennClientCreateOpts = {
   vennURL: string
-  approvingPolicyAddress: string
-  chainId: number
+  vennPolicyAddress: string
   strict?: boolean
 }
 
 export class VennClient {
   protected url: string
 
-  protected approvingPolicyAddress: string
-
-  protected chainId: number
+  protected vennPolicyAddress: string
 
   protected apiInstance: AxiosInstance
 
@@ -29,33 +21,31 @@ export class VennClient {
 
   /**
    * Creates a new VennClient instance.
-   * @param {string} opts.url - The URL of the Singer API.
-   * @param {string} opts.approvingPolicyAddress - The address of the approved calls policy.
-   * @param {number} opts.chainId - The chain ID of the network.
-   * @param {boolean} [opts.strict=true] - Optional. Whether to throw an error if the response from the signer is not 'Approved'. Defaults to true. If set to false, will return the request data on failure.
+   * @param {string} opts.url - The URL of the Venn Node.
+   * @param {string} opts.vennPolicyAddress - The address of the policy.
+   * @param {boolean} [opts.strict=true] - Optional. Whether to throw an error if the response Venn Network is not 'Approved' or if an error occurs. If set to false, will return the request data on failure. Defaults to true.
    * @throws {Error} If any required property is missing.
    */
   constructor(opts: VennClientCreateOpts) {
     this.validateRequiredProperties(opts)
 
     this.url = opts.vennURL
-    this.approvingPolicyAddress = opts.approvingPolicyAddress
-    this.chainId = opts.chainId
+    this.vennPolicyAddress = opts.vennPolicyAddress
     this.strict = opts.strict ?? true
 
     this.apiInstance = axios.create({ baseURL: this.url })
   }
 
   protected async getSignature(
-    txData: SignTxClientRequest,
-  ): Promise<SignedTxResponse | { data: SignTxClientRequest } | undefined> {
+    txData: ethers.TransactionRequest,
+  ): Promise<SignedTxResponse | { data: ethers.TransactionRequest } | undefined> {
     const requestData: SignTxServerRequest = {
       ...txData,
-      chainId: this.chainId,
-      approvingPolicyAddress: this.approvingPolicyAddress,
+      approvingPolicyAddress: this.vennPolicyAddress,
     }
     try {
       const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
+
       // some errors come with 200 status ^_^
       if (signedData.status !== 'Approved') {
         const error = `Request not approved. Status: ${signedData.status}. Message: ${
@@ -66,13 +56,23 @@ export class VennClient {
 
       return signedData
     } catch (error) {
-      return this.handleError(error, parseLegacyServerError, txData)
+      return this.handleError(error, parseServerError, txData)
     }
   }
 
+  /**
+   * Approves a transaction request.
+   * @param {ethers.TransactionRequest} txData - The transaction request to approve. Must include to, from, value and data
+   * @param {string} txData.to - The recipient address of the transaction (required)
+   * @param {string} txData.from - The sender address of the transaction (required)
+   * @param {string} txData.value - The amount of Ether to send with the transaction (required)
+   * @param {string} txData.data - The data payload of the transaction (required)
+   * @returns {ethers.TransactionRequest} The approved transaction request. Includes a from, to, value and data
+   * @throws {Error} If strict is true, and the transaction request is not approved or an error occurs. If strict set to false, will return the transaction request on failure.
+   */
   public async approve(
-    txData: SignTxClientRequest,
-  ): Promise<SignedTxData | { data: SignTxClientRequest }> {
+    txData: ethers.TransactionRequest,
+  ): Promise<ethers.TransactionRequest | { data: ethers.TransactionRequest }> {
     const signedData = (await this.getSignature(txData)) as SignedTxResponse
     try {
       const { data } = signedData
@@ -83,22 +83,16 @@ export class VennClient {
   }
 
   private validateRequiredProperties(opts: VennClientCreateOpts) {
-    if (!opts.vennURL || !opts.approvingPolicyAddress || !opts.chainId) {
-      throw new Error(
-        'Missing required properties. url, approvingPolicyAddress, and chainId are required.',
-      )
+    if (!opts.vennURL || !opts.vennPolicyAddress) {
+      throw new Error('Missing required properties. Url and vennPolicyAddress are required.')
     }
 
     if (!this.isValidUrl(opts.vennURL)) {
       throw new Error('Invalid URL provided.')
     }
 
-    if (!this.isValidEthereumAddress(opts.approvingPolicyAddress)) {
-      throw new Error('Invalid Ethereum address provided for approvingPolicyAddress.')
-    }
-
-    if (!this.isValidChainId(opts.chainId)) {
-      throw new Error('Invalid chainId. Must be a positive integer.')
+    if (!this.isValidEthereumAddress(opts.vennPolicyAddress)) {
+      throw new Error('Invalid Ethereum address provided for vennPolicyAddress.')
     }
   }
 
@@ -115,15 +109,11 @@ export class VennClient {
     return isAddress(address)
   }
 
-  private isValidChainId(chainId: number): boolean {
-    return Number.isInteger(chainId) && chainId > 0
-  }
-
   private handleError(
     error: any,
     errorFunction: (error: unknown) => unknown,
-    txData: SignTxClientRequest,
-  ): { data: SignTxClientRequest } {
+    txData: ethers.TransactionRequest,
+  ): { data: ethers.TransactionRequest } {
     if (this.strict) {
       throw errorFunction(error)
     }

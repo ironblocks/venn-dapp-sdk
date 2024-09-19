@@ -1,7 +1,6 @@
 import { AxiosInstance } from 'axios'
-import { ZeroAddress } from 'ethers'
+import { ethers, ZeroAddress } from 'ethers'
 
-import { type SignTxClientRequest } from '@/types'
 import { VennClient, VennClientCreateOpts } from '@/venn-client'
 
 jest.mock('axios')
@@ -12,7 +11,7 @@ class VennClientExposed extends VennClient {
     super(data)
   }
 
-  public _getSignature(txData: SignTxClientRequest) {
+  public _getSignature(txData: ethers.TransactionRequest) {
     return this.getSignature(txData)
   }
 
@@ -23,11 +22,22 @@ class VennClientExposed extends VennClient {
   get _url() {
     return this.url
   }
+
+  get _vennPolicyAddress() {
+    return this.vennPolicyAddress
+  }
+
+  get _strict() {
+    return this.strict
+  }
+
+  set _strict(strict: boolean) {
+    this.strict = strict
+  }
 }
 
 const VENN_NODE_URL = 'http://www.this-is-a-fake-url.com'
 const POLICY_ADDRESS = ZeroAddress
-const CHAIN_ID = 1
 
 const MOCKED_TX = {
   requestId: 'unique-id',
@@ -50,12 +60,32 @@ describe('Venn Client Tests', () => {
     test('default init', () => {
       const client = new VennClientExposed({
         vennURL: VENN_NODE_URL,
-        chainId: CHAIN_ID,
-        approvingPolicyAddress: POLICY_ADDRESS,
+        vennPolicyAddress: POLICY_ADDRESS,
       })
 
       expect(client._url).toBe(VENN_NODE_URL)
       expect(typeof client.approve).toBe('function')
+    })
+
+    describe('Validation tests', () => {
+      test('invalid url', () => {
+        expect(() => {
+          const client = new VennClientExposed({
+            vennURL: 'invalid-url',
+            vennPolicyAddress: POLICY_ADDRESS,
+          })
+          client._url
+        }).toThrow(/Invalid URL provided./)
+      })
+      test('invalid policy address', () => {
+        expect(() => {
+          const client = new VennClientExposed({
+            vennURL: VENN_NODE_URL,
+            vennPolicyAddress: 'invalid-address',
+          })
+          client._vennPolicyAddress
+        }).toThrow(/Invalid Ethereum address provided for vennPolicyAddress./)
+      })
     })
   })
 
@@ -63,8 +93,7 @@ describe('Venn Client Tests', () => {
     beforeAll(() => {
       vennClient = new VennClientExposed({
         vennURL: VENN_NODE_URL,
-        chainId: CHAIN_ID,
-        approvingPolicyAddress: POLICY_ADDRESS,
+        vennPolicyAddress: POLICY_ADDRESS,
       })
     })
 
@@ -101,6 +130,22 @@ describe('Venn Client Tests', () => {
           expect(signedData).toBe(MOCKED_TX)
 
           jest.resetAllMocks()
+        })
+
+        test('strict mode should throw error', async () => {
+          vennClient._strict = true
+
+          vennClient._apiInstance = {
+            post: jest.fn().mockRejectedValue(new Error('API request failed')),
+          } as unknown as AxiosInstance
+          expect(vennClient.approve(MOCKED_TX)).rejects.toThrow()
+        })
+
+        test('strict mode should return original data', async () => {
+          vennClient._apiInstance = {
+            post: jest.fn().mockResolvedValue({ data: MOCKED_SIGNER_RESPONSE }),
+          } as unknown as AxiosInstance
+          expect(vennClient.approve(MOCKED_TX)).resolves.toBe(MOCKED_TX)
         })
       })
     })

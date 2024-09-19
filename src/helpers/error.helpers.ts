@@ -18,7 +18,7 @@ const isLegacyServerLikeError = (error: AxiosError) =>
     Object.prototype.hasOwnProperty.call(error.response?.data as object, prop),
   )
 
-export const parseLegacyServerError = (error: unknown) => {
+export const parseServerError = (error: unknown) => {
   if (!isLegacyServerLikeError(error as AxiosError)) return error
 
   const responseData = (error as AxiosError).response?.data as ResponseData

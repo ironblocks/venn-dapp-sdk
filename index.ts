@@ -1,3 +1,3 @@
 export * from '@/errors'
-export * from '@/types/legacy-server.types'
+export * from '@/types/server.types'
 export { VennClient } from '@/venn-client'

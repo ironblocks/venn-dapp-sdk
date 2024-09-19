@@ -1,9 +1,7 @@
 import * as apiErrors from './api.errors'
-import * as legacyServerErrors from './legacy-server.errors'
-import * as vennClientErrors from './venn-client.errors'
+import * as serverErrors from './server.errors'
 
 export const errors = {
-  ...legacyServerErrors,
-  ...vennClientErrors,
+  ...serverErrors,
   ...apiErrors,
 }
