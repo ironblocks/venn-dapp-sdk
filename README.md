@@ -1,136 +1,190 @@
+<!-- omit from toc -->
+# Venn DApp SDK
+
+[![NPM Version](https://img.shields.io/npm/v/@vennbuild/cli?style=for-the-badge)](https://www.npmjs.com/~vennbuild)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
-![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)  
+[![Discord](https://img.shields.io/badge/Discrd-blue?logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/1065679814289268929)
+[![X](https://img.shields.io/badge/@VennBuild-gray?style=for-the-badge&logo=x)](https://twitter.com/VennBuild)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
+SDK for easy DApp integrations with Venn Security Network
 
-# @vennbuild/venn-dapp-sdk
-SDK for easy DApp integrations with Venn Security Network. This SDK is framework agnostic and will be compatible with any modern web application.
+👉 [**What is Venn?**](https://docs.venn.build/)
 
-[What is Venn?](https://docs.venn.build/)
-
+<!-- omit from toc -->
 ## Table of Contents
-- [Quick Start](#quick-start)
-- [Introduction](#ironblocksvenn-dapp-sdk)
-- [Installation](#installation)
-- [Usage:](#usage)
-    - [Venn Network Signature](#venn-network-signature)
-        - [Background](#background)
-        - [Getting started](#getting-started)
-        - [Example - How to use the SDK](#example---how-to-use-the-sdk)
 
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [📚 Usage](#-usage)
+  - [Approving Transactions](#approving-transactions)
+  - [Venn Client](#venn-client)
+  - [Security Nodes](#security-nodes)
+  - [Strict Mode](#strict-mode)
+- [⚙️ Configuration](#️-configuration)
+- [💬 Support \& Documentation](#-support--documentation)
+- [📜 License](#-license)
 
+## 🚀 Quick Start
 
+Follow these steps to protect your DApp with Venn:
 
+1. Install the SDK in your project:
 
-## Quick Start
-Install the SDK with npm install `@vennbuild/venn-dapp-sdk`. Initialize a `VennClient` with a `Venn Node URL`, `policy contract address`, and `chain ID`. Create a transaction request (from, to, data, value), then call `approve()` to get the signed transaction. Submit the signed transaction on-chain. 
+    ```shell
+    npm i @vennbuild/venn-dapp-sdk
+    ```
 
-```ts
-import { VennClient } from '@vennbuild/venn-dapp-sdk'
-import ethers from 'ethers'
+2. Instantiate a new **`VennClient`**:
 
-const vennClient = new VennClient({
-  vennURL: 'https://api.venn.build/test/url/do/not/use',
-  vennPolicyAddress: '0x1234567890123456789012345678901234567890',
-})
-const transaction = {
-  from: '0x1234567890123456789012345678901234567890',
-  to: '0x1234567890123456789012345678901234567890',
-  data: '0x1234567890123456789012345678901234567890',
-  value: '0'
-}
-const signedTransaction = await vennClient.approve(transaction)
+    ```typescript
+    import { VennClient } from '@vennbuild/venn-dapp-sdk';
 
-```
+    const vennURL           = process.env.VENN_NODE_URL;
+    const vennPolicyAddress = process.env.VENN_POLICY_ADDRESS;
 
+    const vennClient = new VennClient({ vennURL, vennPolicyAddress });
+    ```
 
-## Installation
+3. Approve your users transactions with Venn:
 
-```bash
+    ```typescript
+    const approvedTransaction = await vennClient.approve({
+        from,
+        to,
+        data,
+        value
+    });
+    ```
+
+4. Finally, send the approved transaction onchain as your DApp normally would
+
+    ```typescript
+    const receipt = await wallet.sendTransaction(approvedTransaction);
+    ```
+
+## 📦 Installation
+
+<!-- omit from toc -->
+### Prerequisites
+
+- You have integrated the [**Firewall SDK**](https://www.npmjs.com/package/@vennbuild/cli#firewall-integration) into your smart contracts
+- You have the address of your [**Venn Policy**](https://www.npmjs.com/package/@vennbuild/cli#venn-integration)
+
+<!-- omit from toc -->
+### Install
+
+```shell
 npm install @vennbuild/venn-dapp-sdk
 ```
 
-## Usage
+## 📚 Usage
 
-Use this SDK to easily interact with protocols protected by the Venn Network Approved Calls Policy.
-**For using this SDK you'll need a Venn Node URL.**  
+Use this SDK to easily integrate your DApp with Venn.  
+First, make sure you have integrated your smart contracts with the  [**Firewall SDK**](https://www.npmjs.com/package/@vennbuild/cli#firewall-integration), and that you have your [**Venn Policy**](https://www.npmjs.com/package/@vennbuild/cli#venn-integration) address readily available.
 
+### Approving Transactions
 
-### Venn Network Signature
+Once your smart contracts protected by Venn, only approved transactions will be allowed to go through. Transactions that are not approved will be reverted onchain.
 
-#### Background
+This SDK will ensure your DApp's Frontend approves transactions with Venn before sending them onchain.
 
-Protocols on the Venn Network protected by the Approved Calls Policy, are expecting certain calls to be signed by Venn Network. This SDK allows you to easily sign your transaction data. Once the transaction is approved and signed, you can proceed with executing it on-chain. Unsigned calls to protected protocols will revert. 
+### Venn Client
 
+The **`VennClient`** is your DApp's entry point for interacting with Venn.  
+It provides a simple transaction approval interface that seamlessly integrates with your existing DApp's code:
 
-If you're a protocol owner, and you want to allow your users to interact with your protocol using this SDK, you'll need to set up your contracts:
-- Target contract should inherit from `FirewallConsumerBase`
-- Target contract firewall should be activated (should have active firewall address set either during deployment or via `setFirewall` method)
-- Target contract should have `ApprovedCallsPolicy` deployed and activated (via `firewall.addGlobalPolicy`)
+```typescript
+import { VennClient } from '@ironblocks/venn-dapp-sdk';
 
-For more information about setting up your contracts, please refer to [Venn Documentation](https://docs.venn.build/)
+const vennURL           = process.env.VENN_NODE_URL;
+const vennPolicyAddress = process.env.VENN_POLICY_ADDRESS;
 
-### Getting started
-
-1. Create a new Venn Client instance with your Venn Node URL. Pass the following parameters:
-- `vennURL`: String. URL of your Venn Node.
-- `vennPolicyAddress`: String. Address of the `ApprovedCallsPolicy` contract.
-- `strict`: Boolean. If set to `true`, the SDK will throw an error in case of an error while signing the transaction or if the transaction is not approved by Venn Network. If set to `false`, the SDK will return a request data in case of an error. Default value is `true`.
-
-
-2. Create a transaction request object.
-- `from`: String. Address of the sender
-- `to`: String. Address of the recipient
-- `data`: String. Encoded data of the transaction
-- `value`: String. Value of the transaction
-
-3. Call `approve` method with the transaction request object.
-
-4. Returned value is a signed transaction request object:
-- `from`: String. Address of the sender. Same as the original transaction.
-- `to`: String. Address of the recipient. Same as the original transaction.
-- `data`: String. Signed data of the transaction. 
-- `value`: String. Value of the transaction. Same as the original transaction.
-
-5. Submit the signed transaction request object instead of the original one.
-
-### Example - How to use the SDK
-```ts
-import { VennClient } from '@ironblocks/venn-dapp-sdk'
-
-const url = process.env.VENN_NODE_URL
-const policyAddress = process.env.VENN_POLICY_ADDRESS
-
-const vennClient = new VennClient({ vennURL: url , vennPolicyAddress: policyAddress})
-
-const transaction= {
-    from: '0xfdD055Cf3EaD343AD51f4C7d1F12558c52BaDFA5',
-    to: '0x10A88C7001900CE4299f62dA80D1c76121DcbAF6',
-    data: '0x88C70010' // encoded data of your transaction
-    value: ethers.utils.parseEther('0')
-}
-
-const signedTransaction = await vennClient.approve(transaction)
-
-console.log(signedTransaction)
-// {
-//     from: '0xfdD055Cf3EaD343AD51f4C7d1F12558c52BaDFA5',
-//     to: '0x10A88C7001900CE4299f62dA80D1c76121DcbAF6',
-//     data: '0xCB45Cf3EaD343AD51f0CE4299f62dA80D1c76121DcbAF6A7', // signed data of the transaction
-//     value: 0
-// }
-
-/* submit signed transaction instead of original one */
+const vennClient = new VennClient({ vennURL, vennPolicyAddress });
+const approvedTx = await vennClient.approve({ from, to, data, value });
 ```
 
-#### What happens under the hood?
+The approved transactions has the same **`to`**, **`from`**, and **`value`**, with an updated **`data`** field that now includes a secure signature that will allow the transaction to go through the onchain Firewall
 
-Original transaction data is substituted with the same data, but signed by Venn Network.
+```typescript
+console.log(approvedTx);
 
-1. Transaction is inspected by Venn Network.
-2. If approved, the transaction is signed by Venn Network, and returned to the user.
-3. User can now submit the signed transaction **as is** to the network instead of the original one.
-4. If the transaction is not approved, the SDK will throw an error indicating that the transaction was rejected.
+/**
+ * {
+ *      from: original from
+ *      to: original to
+ *      data: <SECURE SIGNATURE + ORIGINAL DATA> (hex string)
+ *      value: original value
+ * }
+```
 
+### Security Nodes
 
-**This SDK demonstrates how to integrate the Ironblocks Firewall with Venn Network**
+Venn protects your protocol by leveraging collective intelligence of multiple security node operators, all at once, in real time.
+
+When the **`VennClient`** approves a transaction, it takes the original user transaction *(in the form of `{ from, to, data, value }`)* and sends it to any one of it's security nodes for inspection.
+
+The security nodes propagate the transaction to all nodes on the network via P2P, and responds back with a signed transaction *(in the form of `{ from, to, data, value }`)* that your DApp can now submit onchain.
+
+### Strict Mode
+
+By default, the SDK runs with **strict mode enabled**.
+
+<!-- omit from toc -->
+#### Enabled
+
+In strict mode, if an error occurs while trying to approve the transaction, or if the transaction was not approved by Venn - the SDK will throw an error.
+
+Your DApp will need to handle this gracefully handle this error:
+> The signed transactions has the same **`to`**, **`from`**, and **`value`**, with an updated **`data`** field that now includes a secure signature that will allow the transaction to go through the onchain Firewall
+
+```typescript
+try {
+    const approvedTx = await vennClient.approve({
+        from,
+        to,
+        data,
+        value
+    });
+}
+catch (e) {
+    // handle errors and unapproved transactions
+    //
+    // for example, alert the user that the transaction did not pass security checks etc
+}
+```
+
+<!-- omit from toc -->
+#### Disabled
+
+When strict mode is disabled, the SDK will gracefully handle any errors internally - **including ignoring unapproved transactions**.
+
+> ⚠️  
+> **IMPORTANT:** While it may make sense for certain DApps to disable strict mode, we strongly encourage you to **keep strict mode enabled**
+
+## ⚙️ Configuration
+
+- `vennURL: string`  
+    the Venn security node to connect the client to
+
+- `vennPolicyAddress: string`  
+    the address of your  [**Venn Policy**](https://www.npmjs.com/package/@vennbuild/cli#venn-integration)
+
+- `strict: boolean`  
+    wether or not to enable strict mode *(default: `true`)*
+
+## 💬 Support & Documentation
+
+We're here to help.  
+
+- Join the discussion on Discord: [Venn Discord](https://discord.gg/97cg6Qhg)
+
+- Read the docs: [Venn Documentation](https://docs.venn.build)
+
+## 📜 License
+
+Venn DApp SDK is released under the [MIT License](LICENSE).
+
+This SDK demonstrates how to integrate DApps with Venn Network together with Ironblocks Firewall

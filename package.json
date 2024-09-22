@@ -1,6 +1,6 @@
 {
   "name": "@vennbuild/venn-dapp-sdk",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "SDK for interactions with Venn Network",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
