@@ -1,6 +1,6 @@
 describe('Sanity tests', () => {
     test('boolean test', () => {
-        expect(true).toBeTruthy();
-        expect(false).toBeFalsy();
-    });
-});
+        expect(true).toBeTruthy()
+        expect(false).toBeFalsy()
+    })
+})
