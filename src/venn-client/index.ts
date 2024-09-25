@@ -1,23 +1,24 @@
-import axios, { AxiosInstance } from 'axios';
-import { ethers, isAddress } from 'ethers';
+import axios, { AxiosInstance } from 'axios'
+import { TransactionRequest } from 'ethers'
 
-import { parseServerError } from '@/helpers';
-import { type SignedTxResponse, type SignTxServerRequest } from '@/types';
+import { errors } from '@/errors'
+import { isValidEthereumAddress, isValidUrl, parseApiError, parseServerError } from '@/helpers'
+import { type SignedTxResponse, type SignTxServerRequest } from '@/types'
 
 export type VennClientCreateOpts = {
-    vennURL: string;
-    vennPolicyAddress: string;
-    strict?: boolean;
-};
+    vennURL: string
+    vennPolicyAddress: string
+    strict?: boolean
+}
 
 export class VennClient {
-    protected url: string;
+    protected url: string
 
-    protected vennPolicyAddress: string;
+    protected vennPolicyAddress: string
 
-    protected apiInstance: AxiosInstance;
+    protected apiInstance: AxiosInstance
 
-    protected strict: boolean;
+    protected strict: boolean
 
     /**
      * Creates a new VennClient instance.
@@ -27,32 +28,37 @@ export class VennClient {
      * @throws {Error} If any required property is missing.
      */
     constructor(opts: VennClientCreateOpts) {
-        this.validateRequiredProperties(opts);
+        this.validateRequiredProperties(opts)
 
-        this.url = opts.vennURL;
-        this.vennPolicyAddress = opts.vennPolicyAddress;
-        this.strict = opts.strict ?? true;
+        this.url = opts.vennURL
+        this.vennPolicyAddress = opts.vennPolicyAddress
+        this.strict = opts.strict ?? true
 
-        this.apiInstance = axios.create({ baseURL: this.url });
+        this.apiInstance = axios.create({ baseURL: this.url })
     }
 
-    protected async getSignature(txData: ethers.TransactionRequest): Promise<SignedTxResponse | { data: ethers.TransactionRequest } | undefined> {
-        const requestData: SignTxServerRequest = {
-            ...txData,
-            approvingPolicyAddress: this.vennPolicyAddress,
-        };
+    protected async getSignature(txData: TransactionRequest): Promise<SignedTxResponse> {
         try {
-            const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData);
+            const requestData: SignTxServerRequest = {
+                ...txData,
+                approvingPolicyAddress: this.vennPolicyAddress,
+            }
+
+            const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
 
             // some errors come with 200 status ^_^
             if (signedData.status !== 'Approved') {
-                const error = `Request not approved. Status: ${signedData.status}. Message: ${signedData.message || 'No message provided'}`;
-                throw new Error(error);
+                throw new errors.TxRejectedError(
+                    `Request not approved. Status: ${signedData.status}. Message: ${
+                        signedData.message || 'No message provided'
+                    }`,
+                )
             }
 
-            return signedData;
+            return signedData
         } catch (error) {
-            return this.handleError(error, parseServerError, txData);
+            // first checking default http errors then Venn Node specific ones
+            throw parseApiError(error) ?? parseServerError(error)
         }
     }
 
@@ -66,48 +72,37 @@ export class VennClient {
      * @returns {ethers.TransactionRequest} The approved transaction request. Includes a from, to, value and data
      * @throws {Error} If strict is true, and the transaction request is not approved or an error occurs. If strict set to false, will return the transaction request on failure.
      */
-    public async approve(txData: ethers.TransactionRequest): Promise<ethers.TransactionRequest | { data: ethers.TransactionRequest }> {
-        const signedData = (await this.getSignature(txData)) as SignedTxResponse;
+    public async approve(txData: TransactionRequest): Promise<TransactionRequest> {
         try {
-            const { data } = signedData;
-            return data;
+            const { data } = await this.getSignature(txData)
+
+            return data
         } catch (error) {
-            return this.handleError(error, () => new Error('Could not parse signature data'), txData);
+            return this.handleError(error, txData)
         }
     }
 
     private validateRequiredProperties(opts: VennClientCreateOpts) {
         if (!opts.vennURL || !opts.vennPolicyAddress) {
-            throw new Error('Missing required properties. Url and vennPolicyAddress are required.');
+            throw new errors.InvalidInitParamsError(
+                'Missing required properties: `vennURL` and `vennPolicyAddress` are required.',
+            )
         }
 
-        if (!this.isValidUrl(opts.vennURL)) {
-            throw new Error('Invalid URL provided.');
+        if (!isValidUrl(opts.vennURL)) {
+            throw new errors.InvalidInitParamsError('Invalid `vennURL` provided.')
         }
 
-        if (!this.isValidEthereumAddress(opts.vennPolicyAddress)) {
-            throw new Error('Invalid Ethereum address provided for vennPolicyAddress.');
-        }
-    }
-
-    private isValidUrl(url: string): boolean {
-        try {
-            new URL(url);
-            return true;
-        } catch {
-            return false;
+        if (!isValidEthereumAddress(opts.vennPolicyAddress)) {
+            throw new errors.InvalidInitParamsError('Invalid Ethereum address provided for `vennPolicyAddress`.')
         }
     }
 
-    private isValidEthereumAddress(address: string): boolean {
-        return isAddress(address);
-    }
+    private handleError(error: unknown, txData: TransactionRequest): TransactionRequest {
+        if (this.strict) throw error
 
-    private handleError(error: any, errorFunction: (error: unknown) => unknown, txData: ethers.TransactionRequest): { data: ethers.TransactionRequest } {
-        if (this.strict) {
-            throw errorFunction(error);
-        }
         // npm unwraps the 'data' property of the object
-        return { data: txData };
+        // npm do what?? (c) Mark
+        return txData
     }
 }

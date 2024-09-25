@@ -15,6 +15,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "importHelpers": true,
+    "noImplicitAny": true,
     "baseUrl": "./",
     "outDir": "dist",
     "paths": {

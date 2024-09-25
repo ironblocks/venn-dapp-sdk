@@ -141,6 +141,8 @@ Your DApp will need to handle this gracefully handle this error:
 > The signed transactions has the same **`to`**, **`from`**, and **`value`**, with an updated **`data`** field that now includes a secure signature that will allow the transaction to go through the onchain Firewall
 
 ```typescript
+import { errors } from '@ironblocks/venn-dapp-sdk'
+
 try {
     const approvedTx = await vennClient.approve({
         from,
@@ -153,6 +155,19 @@ catch (e) {
     // handle errors and unapproved transactions
     //
     // for example, alert the user that the transaction did not pass security checks etc
+
+    if (!(e instanceof Error)) return alert(e)
+
+    switch(error.constructor) {
+        case errors.InvalidInitParamsError:
+            return alert(`Invalid params: ${error.message}`)
+        case errors.ConnectionRefused:
+            return alert(`Network error: ${error.message}`)
+        case errors.TxRejectedError:
+            return alert(`Venn Error: Tx Not Approved: ${error.message}`)
+        default:
+            return alert('Something wrong...')
+    }
 }
 ```
 
@@ -173,7 +188,7 @@ When strict mode is disabled, the SDK will gracefully handle any errors internal
     the address of your  [**Venn Policy**](https://www.npmjs.com/package/@vennbuild/cli#venn-integration)
 
 - `strict: boolean`  
-    wether or not to enable strict mode *(default: `true`)*
+    whether or not to enable strict mode *(default: `true`)*
 
 ## 💬 Support & Documentation
 

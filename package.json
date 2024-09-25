@@ -1,6 +1,6 @@
 {
   "name": "@vennbuild/venn-dapp-sdk",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "SDK for interactions with Venn Network",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -33,11 +33,9 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest --silent=false",
     "publish:npm": "npm pack && npm publish && rm -rf *.tgz",
-    "publish:local": "npm link",
-    "generate-abi-types": "typechain --target=ethers-v6 'src/abi/**/*.json' --out-dir src/types/contracts"
+    "publish:local": "npm link"
   },
   "devDependencies": {
-    "@typechain/ethers-v6": "^0.5.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.1.0",
     "@typescript-eslint/eslint-plugin": "^5.59.8",
@@ -51,12 +49,11 @@
     "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
     "tsup": "^8.2.4",
-    "typechain": "^8.3.2",
     "typescript": "^5.5.4",
     "yorkie": "^2.0.0"
   },
   "dependencies": {
-    "axios": "^1.7.3",
+    "axios": "^1.7.7",
     "ethers": "^6.13.2"
   }
 }
