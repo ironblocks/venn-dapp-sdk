@@ -55,7 +55,7 @@ const MOCKED_SIGNER_RESPONSE = {
 
 let vennClient: VennClientExposed
 
-describe('Venn Client Tests', () => {
+describe('Venn Client Mocked Tests', () => {
     describe('Init tests', () => {
         test('default init', () => {
             const client = new VennClientExposed({

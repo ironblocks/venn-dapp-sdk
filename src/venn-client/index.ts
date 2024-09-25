@@ -44,7 +44,7 @@ export class VennClient {
                 approvingPolicyAddress: this.vennPolicyAddress,
             }
 
-            const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('/sign', requestData)
+            const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
 
             // some errors come with 200 status ^_^
             if (signedData.status !== 'Approved') {
