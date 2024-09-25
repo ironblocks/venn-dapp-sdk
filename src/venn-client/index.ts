@@ -8,7 +8,7 @@ import { type SignedTxResponse, type SignTxServerRequest } from '@/types'
 export type VennClientCreateOpts = {
     vennURL: string
     vennPolicyAddress: string
-    isStrict?: boolean
+    strict?: boolean
 }
 
 export class VennClient {
@@ -18,13 +18,13 @@ export class VennClient {
 
     protected apiInstance: AxiosInstance
 
-    protected isStrict: boolean
+    protected strict: boolean
 
     /**
      * Creates a new VennClient instance.
      * @param {string} opts.url - The URL of the Venn Node.
      * @param {string} opts.vennPolicyAddress - The address of the policy.
-     * @param {boolean} [opts.isStrict=true] - Optional. Whether to throw an error if the response Venn Network is not 'Approved' or if an error occurs. If set to false, will return the request data on failure. Defaults to true.
+     * @param {boolean} [opts.strict=true] - Optional. Whether to throw an error if the response Venn Network is not 'Approved' or if an error occurs. If set to false, will return the request data on failure. Defaults to true.
      * @throws {Error} If any required property is missing.
      */
     constructor(opts: VennClientCreateOpts) {
@@ -32,7 +32,7 @@ export class VennClient {
 
         this.url = opts.vennURL
         this.vennPolicyAddress = opts.vennPolicyAddress
-        this.isStrict = opts.isStrict ?? true
+        this.strict = opts.strict ?? true
 
         this.apiInstance = axios.create({ baseURL: this.url })
     }
@@ -70,7 +70,7 @@ export class VennClient {
      * @param {string} txData.value - The amount of Ether to send with the transaction (required)
      * @param {string} txData.data - The data payload of the transaction (required)
      * @returns {ethers.TransactionRequest} The approved transaction request. Includes a from, to, value and data
-     * @throws {Error} If isStrict is true, and the transaction request is not approved or an error occurs. If isStrict set to false, will return the transaction request on failure.
+     * @throws {Error} If strict is true, and the transaction request is not approved or an error occurs. If strict set to false, will return the transaction request on failure.
      */
     public async approve(txData: TransactionRequest): Promise<TransactionRequest> {
         try {
@@ -99,7 +99,7 @@ export class VennClient {
     }
 
     private handleError(error: unknown, txData: TransactionRequest): TransactionRequest {
-        if (this.isStrict) throw error
+        if (this.strict) throw error
 
         // npm unwraps the 'data' property of the object
         // npm do what?? (c) Mark

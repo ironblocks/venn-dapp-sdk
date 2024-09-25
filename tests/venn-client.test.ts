@@ -28,12 +28,12 @@ class VennClientExposed extends VennClient {
         return this.vennPolicyAddress
     }
 
-    get _isStrict() {
-        return this.isStrict
+    get _strict() {
+        return this.strict
     }
 
-    set _isStrict(isStrict: boolean) {
-        this.isStrict = isStrict
+    set _strict(strict: boolean) {
+        this.strict = strict
     }
 }
 
@@ -154,7 +154,7 @@ describe('Venn Client Tests', () => {
                     const client = new VennClientExposed({
                         vennURL: VENN_NODE_URL,
                         vennPolicyAddress: POLICY_ADDRESS,
-                        isStrict: false,
+                        strict: false,
                     })
 
                     client._apiInstance = {

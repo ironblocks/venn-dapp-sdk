@@ -187,7 +187,7 @@ When strict mode is disabled, the SDK will gracefully handle any errors internal
 - `vennPolicyAddress: string`  
     the address of your  [**Venn Policy**](https://www.npmjs.com/package/@vennbuild/cli#venn-integration)
 
-- `isStrict: boolean`  
+- `strict: boolean`  
     whether or not to enable strict mode *(default: `true`)*
 
 ## 💬 Support & Documentation
