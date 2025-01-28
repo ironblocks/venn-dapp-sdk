@@ -1,3 +1,4 @@
+import { createProvider, MetamaskProvider, Provider, ProviderDetector } from '@distributedlab/w3p'
 import axios, { AxiosInstance } from 'axios'
 import { TransactionRequest } from 'ethers'
 
@@ -20,6 +21,8 @@ export class VennClient {
 
     protected strict: boolean
 
+    protected web3Provider?: Provider
+
     /**
      * Creates a new VennClient instance.
      * @param {string} opts.url - The URL of the Venn Node.
@@ -30,6 +33,8 @@ export class VennClient {
     constructor(opts: VennClientCreateOpts) {
         this.validateRequiredProperties(opts)
 
+        this.initProvider()
+
         this.url = opts.vennURL
         this.vennPolicyAddress = opts.vennPolicyAddress
         this.strict = opts.strict ?? true
@@ -37,11 +42,22 @@ export class VennClient {
         this.apiInstance = axios.create({ baseURL: this.url })
     }
 
+    protected async initProvider() {
+        if (typeof window === 'undefined') return
+
+        const providerDetector = new ProviderDetector()
+
+        await providerDetector.init()
+
+        this.web3Provider = await createProvider(MetamaskProvider, { providerDetector: providerDetector })
+    }
+
     protected async getSignature(txData: TransactionRequest): Promise<SignedTxResponse> {
         try {
             const requestData: SignTxServerRequest = {
                 ...txData,
                 approvingPolicyAddress: this.vennPolicyAddress,
+                chainId: txData?.chainId ?? this.web3Provider?.chainId,
             }
 
             const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
@@ -101,8 +117,6 @@ export class VennClient {
     private handleError(error: unknown, txData: TransactionRequest): TransactionRequest {
         if (this.strict) throw error
 
-        // npm unwraps the 'data' property of the object
-        // npm do what?? (c) Mark
         return txData
     }
 }
