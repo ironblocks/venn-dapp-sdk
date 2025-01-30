@@ -85,7 +85,7 @@ export class VennClient {
      * @param {string} txData.from - The sender address of the transaction (required)
      * @param {string} txData.value - The amount of Ether to send with the transaction (required)
      * @param {string} txData.data - The data payload of the transaction (required)
-     * @param {number} txData.chainId - Chain ID to which the transaction will be sent (optional). If omitted, the chain ID currently set in the user's wallet will be used. If unavailable, the transaction will fail
+     * @param {number} [txData.chainId] - Chain ID to which the transaction will be sent (optional). If omitted, the chain ID currently set in the user's wallet will be used. If unavailable, the transaction will fail
      * @returns {ethers.TransactionRequest} The approved transaction request. Includes a from, to, value and data
      * @throws {Error} If strict is true, and the transaction request is not approved or an error occurs. If strict set to false, will return the transaction request on failure
      */
