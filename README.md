@@ -55,7 +55,8 @@ Follow these steps to protect your DApp with Venn:
         from,
         to,
         data,
-        value
+        value,
+        chainId // optional. If omitted, the chain ID currently set in the user's wallet will be used
     });
     ```
 
@@ -108,6 +109,12 @@ const approvedTx = await vennClient.approve({ from, to, data, value });
 
 The approved transactions has the same **`to`**, **`from`**, and **`value`**, with an updated **`data`** field that now includes a secure signature that will allow the transaction to go through the onchain Firewall
 
+You can optionally pass a **`chainId`** to the **`approve`** method 
+```typescript
+const approvedTx = await vennClient.approve({ from, to, data, value, chainId });
+``` 
+If omitted, the chain ID currently set in the user's wallet will be used. If unavailable, the transaction will fail
+
 ```typescript
 console.log(approvedTx);
 
@@ -148,7 +155,8 @@ try {
         from,
         to,
         data,
-        value
+        value,
+        chainId // optional
     });
 }
 catch (e) {
