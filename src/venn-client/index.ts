@@ -1,10 +1,28 @@
-import { createProvider, MetamaskProvider, Provider, ProviderDetector } from '@distributedlab/w3p'
+import {
+    CoinbaseProvider,
+    createProvider,
+    errors as web3Errors,
+    MetamaskProvider,
+    Provider,
+    ProviderDetector,
+    ProviderProxyConstructor,
+    PROVIDERS,
+} from '@distributedlab/w3p'
 import axios, { AxiosInstance } from 'axios'
 import { TransactionRequest } from 'ethers'
 
 import { errors } from '@/errors'
 import { isValidEthereumAddress, isValidUrl, parseApiError, parseServerError } from '@/helpers'
 import { type SignedTxResponse, type SignTxServerRequest } from '@/types'
+
+const supportedProviders: {
+    [key in VennSupportedProviders]: ProviderProxyConstructor
+} = {
+    [PROVIDERS.Metamask]: MetamaskProvider,
+    [PROVIDERS.Coinbase]: CoinbaseProvider,
+}
+
+export type VennSupportedProviders = PROVIDERS.Metamask | PROVIDERS.Coinbase
 
 export type VennClientCreateOpts = {
     vennURL: string
@@ -45,11 +63,25 @@ export class VennClient {
     protected async initProvider() {
         if (typeof window === 'undefined') return
 
-        const providerDetector = new ProviderDetector()
+        try {
+            const providerDetector = new ProviderDetector()
 
-        await providerDetector.init()
+            await providerDetector.init()
 
-        this.web3Provider = await createProvider(MetamaskProvider, { providerDetector: providerDetector })
+            const availableProviders = Object.keys(providerDetector.providers) as VennSupportedProviders[]
+
+            if (!availableProviders.length) throw new web3Errors.ProviderInjectedInstanceNotFoundError()
+
+            const providerProxyConstructor = supportedProviders[availableProviders[0]]
+
+            this.web3Provider = await createProvider(providerProxyConstructor, { providerDetector: providerDetector })
+        } catch (error) {
+            console.warn(
+                `Web3Provider in VennClient was not initialized: ${
+                    error instanceof Error ? error.message : String(error)
+                }`,
+            )
+        }
     }
 
     protected async getSignature(txData: TransactionRequest): Promise<SignedTxResponse> {
@@ -59,6 +91,11 @@ export class VennClient {
                 approvingPolicyAddress: this.vennPolicyAddress,
                 chainId: txData?.chainId ?? this.web3Provider?.chainId,
             }
+
+            if (!requestData.chainId)
+                throw new errors.MissingChainIdError(
+                    'Chain id was not provided in request and was not available via injected provider',
+                )
 
             const { data: signedData } = await this.apiInstance.post<SignedTxResponse>('', requestData)
 

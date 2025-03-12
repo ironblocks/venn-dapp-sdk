@@ -41,6 +41,7 @@ const VENN_NODE_URL = 'http://this-is-a-fake-url.com'
 const POLICY_ADDRESS = ZeroAddress
 
 const MOCKED_TX = {
+    chainId: 1,
     from: '0x6738fA889fF31F82d9Fe8862ec025dbE318f3Fde',
     to: '0xF06Ab383528F51dA67E2b2407327731770156ED6',
     value: '0',
@@ -112,6 +113,13 @@ describe('Venn Client Mocked Tests', () => {
 
                     expect(signature).toBeDefined()
                     expect(signature.data).toEqual(MOCKED_SIGNER_RESPONSE.data)
+                })
+
+                test('should throw MissingChainId error', async () => {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { chainId, ...TX_WITH_NO_CHAIN } = MOCKED_TX
+
+                    expect(() => vennClient._getSignature(TX_WITH_NO_CHAIN)).rejects.toThrow(errors.MissingChainIdError)
                 })
             })
         })
